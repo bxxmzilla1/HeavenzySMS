@@ -1,0 +1,7 @@
+.DS_Store
+iOSApp/*.xcodeproj
+iOSApp/build/
+iOSApp/Payload/
+iOSApp/*.ipa
+ipa_build/
+dist/*.ipa
