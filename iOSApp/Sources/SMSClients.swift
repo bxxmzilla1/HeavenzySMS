@@ -50,7 +50,7 @@ struct DiddySMSClient {
 
     private func request(_ method: String, _ path: String, body: [String: Any]? = nil) async throws -> (ok: Bool, status: Int, json: [String: Any], errorMessage: String?) {
         let rel = path.hasPrefix("/") ? path : "/\(path)"
-        guard let url = URL(string: base + rel) else { throw SMSError.message("Bad URL") }
+        guard let url = URL(string: Self.base + rel) else { throw SMSError.message("Bad URL") }
         var req = URLRequest(url: url)
         req.httpMethod = method
         req.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
