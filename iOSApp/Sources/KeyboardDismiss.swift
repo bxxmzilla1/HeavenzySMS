@@ -37,4 +37,19 @@ final class KeyboardDismissInstaller: NSObject, UIGestureRecognizerDelegate {
                            shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool {
         true
     }
+
+    // Only dismiss when the tap is NOT on a text field / control. This keeps the
+    // field's own tap, double-tap and long-press (select / paste) gestures intact.
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
+                           shouldReceive touch: UITouch) -> Bool {
+        var view = touch.view
+        while let v = view {
+            if v is UITextField || v is UITextView || v is UIControl { return false }
+            // The editing-interaction / selection views that back UITextField also
+            // report as UITextInput-conforming; skip those too.
+            if v is UITextInput { return false }
+            view = v.superview
+        }
+        return true
+    }
 }
