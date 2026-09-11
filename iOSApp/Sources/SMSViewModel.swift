@@ -57,7 +57,7 @@ final class SMSViewModel: ObservableObject {
                 case .diddy:
                     let key = settings.normalizedDiddyKey
                     guard !key.isEmpty else { throw SMSError.message("Add your DiddySMS API key in Settings first.") }
-                    order = try await DiddySMSClient(key: key).order(serviceTerm: term)
+                    order = try await DiddySMSClient(key: key).order(serviceTerm: term, preferredCarrier: settings.diddyCarrier)
                 case .grizzly:
                     let key = settings.grizzlyKey.trimmingCharacters(in: .whitespacesAndNewlines)
                     guard !key.isEmpty else { throw SMSError.message("Add your GrizzlySMS API key in Settings first.") }

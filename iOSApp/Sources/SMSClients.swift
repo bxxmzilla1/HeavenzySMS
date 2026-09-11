@@ -145,9 +145,10 @@ struct DiddySMSClient {
     }
 
     /// Order a number. Builds a candidate slug list from the live catalog (plus the
-    /// raw term as a fallback), tries each until one is accepted, then falls back to
-    /// per-carrier ordering on the best candidate.
-    func order(serviceTerm: String) async throws -> SMSOrder {
+    /// raw term as a fallback), tries each until one is accepted. If `preferredCarrier`
+    /// is set (e.g. "att", "tmobile"), that carrier is requested first; otherwise
+    /// DiddySMS picks, then we fall back to per-carrier ordering.
+    func order(serviceTerm: String, preferredCarrier: String = "") async throws -> SMSOrder {
         let term = serviceTerm.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !term.isEmpty else { throw SMSError.message("No service configured.") }
 
@@ -159,18 +160,25 @@ struct DiddySMSClient {
         var chosen: String = term
         var order: [String: Any]? = nil
 
+        let carrier = preferredCarrier.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let carrierSet = !carrier.isEmpty && carrier != "any"
+
         for service in candidates {
-            let r = try await request("POST", "/orders", body: ["service": service])
+            var body: [String: Any] = ["service": service]
+            if carrierSet { body["carrier"] = carrier }
+            let r = try await request("POST", "/orders", body: body)
             if let o = r.json["order"] as? [String: Any], o["id"] != nil {
                 order = o; chosen = service; break
             }
             if let e = r.errorMessage { lastError = e }
         }
 
-        // Carrier fallback on the top candidate.
+        // Carrier fallback on the top candidate. When the user pinned a carrier we
+        // respect it and don't silently switch to a different one.
         if order == nil {
             let service = candidates.first ?? term
-            for c in Self.carriers {
+            let fallbackCarriers = carrierSet ? [carrier] : Self.carriers
+            for c in fallbackCarriers {
                 let r = try await request("POST", "/orders", body: ["service": service, "carrier": c])
                 if let o = r.json["order"] as? [String: Any], o["id"] != nil {
                     order = o; chosen = service; break

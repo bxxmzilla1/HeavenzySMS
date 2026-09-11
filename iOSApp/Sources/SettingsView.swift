@@ -29,6 +29,22 @@ struct SettingsView: View {
                         VStack(alignment: .leading, spacing: 14) {
                             sectionTitle("DiddySMS", systemImage: "key.fill")
                             secureField("DiddySMS API key", text: $settings.diddyKey, placeholder: "Bearer key from diddysms.com")
+
+                            fieldLabel("Carrier")
+                            Picker("Carrier", selection: $settings.diddyCarrier) {
+                                ForEach(DiddyCarrier.all) { c in
+                                    Text(c.name).tag(c.id)
+                                }
+                            }
+                            .pickerStyle(.menu)
+                            .tint(Theme.purpleBright)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.vertical, 10).padding(.horizontal, 12)
+                            .background(RoundedRectangle(cornerRadius: 12).fill(Color.black.opacity(0.25)))
+                            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.cardStroke, lineWidth: 1))
+                            Text("Pick AT&T or T-Mobile to force that network, or Any to let DiddySMS choose.")
+                                .font(.system(size: 12, design: .rounded))
+                                .foregroundColor(Theme.textSecondary)
                         }
                     }
 

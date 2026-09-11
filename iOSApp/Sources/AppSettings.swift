@@ -13,6 +13,21 @@ enum SMSProvider: String, CaseIterable, Identifiable {
     }
 }
 
+/// A DiddySMS carrier choice (value = the API `carrier` slug; "any" = let DiddySMS pick).
+struct DiddyCarrier: Identifiable, Hashable {
+    let id: String
+    let name: String
+    static let all: [DiddyCarrier] = [
+        .init(id: "any", name: "Any — let DiddySMS pick"),
+        .init(id: "att", name: "AT&T"),
+        .init(id: "tmobile", name: "T-Mobile"),
+        .init(id: "verizon", name: "Verizon"),
+        .init(id: "metropcs", name: "Metro by T-Mobile"),
+        .init(id: "boost", name: "Boost Mobile"),
+        .init(id: "cricket", name: "Cricket"),
+    ]
+}
+
 /// A GrizzlySMS country choice (value = sms-activate country id).
 struct GrizzlyCountry: Identifiable, Hashable {
     let id: String
@@ -39,6 +54,7 @@ final class AppSettings: ObservableObject {
 
     @Published var provider: SMSProvider { didSet { defaults.set(provider.rawValue, forKey: "smsProvider") } }
     @Published var diddyKey: String { didSet { defaults.set(diddyKey, forKey: "diddySmsKey") } }
+    @Published var diddyCarrier: String { didSet { defaults.set(diddyCarrier, forKey: "diddyCarrier") } }
     @Published var grizzlyKey: String { didSet { defaults.set(grizzlyKey, forKey: "grizzlySmsKey") } }
     @Published var grizzlyCountry: String { didSet { defaults.set(grizzlyCountry, forKey: "grizzlyCountry") } }
     @Published var grizzlyMaxPrice: String { didSet { defaults.set(grizzlyMaxPrice, forKey: "grizzlyMaxPrice") } }
@@ -48,6 +64,7 @@ final class AppSettings: ObservableObject {
         let p = defaults.string(forKey: "smsProvider") ?? SMSProvider.diddy.rawValue
         provider = SMSProvider(rawValue: p) ?? .diddy
         diddyKey = defaults.string(forKey: "diddySmsKey") ?? ""
+        diddyCarrier = defaults.string(forKey: "diddyCarrier") ?? "any"
         grizzlyKey = defaults.string(forKey: "grizzlySmsKey") ?? ""
         grizzlyCountry = defaults.string(forKey: "grizzlyCountry") ?? "any"
         grizzlyMaxPrice = defaults.string(forKey: "grizzlyMaxPrice") ?? ""
