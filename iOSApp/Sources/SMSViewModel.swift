@@ -10,8 +10,11 @@ final class SMSViewModel: ObservableObject {
         case received         // code arrived
     }
 
+    /// The only supported service for now.
+    static let fixedService = "instagram"
+
     @Published var phase: Phase = .idle
-    @Published var service: String = ""
+    @Published var service: String = fixedService
     @Published var phone: String = ""
     @Published var code: String = ""
     @Published var activeProvider: SMSProvider = .diddy
@@ -35,14 +38,6 @@ final class SMSViewModel: ObservableObject {
     var isBusy: Bool { phase == .ordering }
     var hasOrder: Bool { phase == .waiting || phase == .received }
 
-    /// Resolve the service term to use: explicit field text wins, else the default
-    /// service from Settings.
-    private func resolvedServiceTerm() -> String {
-        let s = service.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !s.isEmpty { return s }
-        return settings.defaultService.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
     func requestNumber() {
         guard phase == .idle || phase == .received else { return }
         errorMessage = nil
@@ -50,10 +45,10 @@ final class SMSViewModel: ObservableObject {
         phone = ""
         orderId = ""
         phase = .ordering
-        statusText = "Ordering a number…"
+        statusText = "Ordering an Instagram number…"
         let provider = settings.provider
         activeProvider = provider
-        let term = resolvedServiceTerm()
+        let term = Self.fixedService
 
         Task {
             do {
@@ -74,7 +69,6 @@ final class SMSViewModel: ObservableObject {
                 }
                 self.orderId = order.orderId
                 self.phone = order.phone
-                self.service = order.service
                 self.phase = .waiting
                 self.statusText = "Number ready — waiting for SMS code…"
                 self.startPolling()

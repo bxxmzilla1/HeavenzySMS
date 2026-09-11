@@ -55,14 +55,21 @@ struct SettingsView: View {
                         }
                     }
 
-                    // Shared
+                    // Service (fixed)
                     GlassCard {
-                        VStack(alignment: .leading, spacing: 14) {
-                            sectionTitle("Service", systemImage: "slider.horizontal.3")
-                            plainField("Default SMS service (optional)", text: $settings.defaultService, placeholder: "DiddySMS: e.g. instagram · GrizzlySMS: a code like ig")
-                            Text("Used when you don't type a service on the Numbers tab. Leave blank to auto-detect (DiddySMS).")
-                                .font(.system(size: 12, design: .rounded))
-                                .foregroundColor(Theme.textSecondary)
+                        HStack(spacing: 12) {
+                            Image(systemName: "camera.circle.fill")
+                                .font(.system(size: 24))
+                                .foregroundStyle(Theme.accentGradient)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Service")
+                                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                    .foregroundColor(Theme.textSecondary)
+                                Text("Instagram only (for now)")
+                                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                    .foregroundColor(Theme.textPrimary)
+                            }
+                            Spacer()
                         }
                     }
 

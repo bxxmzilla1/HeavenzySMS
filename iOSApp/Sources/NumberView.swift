@@ -21,6 +21,7 @@ struct NumberView: View {
 
                     serviceCard
                     actionButtons
+
                     if vm.hasOrder { resultCard }
                     if let err = vm.errorMessage { errorCard(err) }
                     statusFooter
@@ -33,21 +34,25 @@ struct NumberView: View {
 
     private var serviceCard: some View {
         GlassCard {
-            VStack(alignment: .leading, spacing: 12) {
-                Label("Service", systemImage: "app.badge")
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
-                    .foregroundColor(Theme.textSecondary)
-                TextField(providerHint, text: $vm.service)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled(true)
-                    .font(.system(size: 17, weight: .medium, design: .rounded))
-                    .foregroundColor(Theme.textPrimary)
-                    .padding(.vertical, 12).padding(.horizontal, 14)
-                    .background(RoundedRectangle(cornerRadius: 12).fill(Color.black.opacity(0.25)))
-                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.cardStroke, lineWidth: 1))
-                Text(providerNote)
-                    .font(.system(size: 12, design: .rounded))
-                    .foregroundColor(Theme.textSecondary)
+            HStack(spacing: 14) {
+                Image(systemName: "camera.circle.fill")
+                    .font(.system(size: 30))
+                    .foregroundStyle(Theme.accentGradient)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Service")
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .foregroundColor(Theme.textSecondary)
+                    Text("Instagram")
+                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                        .foregroundColor(Theme.textPrimary)
+                }
+                Spacer()
+                Text("Only")
+                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                    .foregroundColor(Theme.purpleBright)
+                    .padding(.vertical, 5).padding(.horizontal, 10)
+                    .background(Capsule().fill(Theme.purple.opacity(0.18)))
+                    .overlay(Capsule().stroke(Theme.purple.opacity(0.4), lineWidth: 1))
             }
         }
     }
@@ -175,19 +180,6 @@ struct NumberView: View {
             .foregroundColor(Theme.textSecondary)
             .frame(maxWidth: .infinity)
             .padding(.top, 4)
-    }
-
-    private var providerHint: String {
-        settings.provider == .grizzly ? "e.g. instagram or a code like ig" : "e.g. instagram"
-    }
-
-    private var providerNote: String {
-        if !settings.defaultService.isEmpty && vm.service.isEmpty {
-            return "Using default service from Settings: \(settings.defaultService)"
-        }
-        return settings.provider == .grizzly
-            ? "GrizzlySMS maps a brand to a code (instagram → ig), or type a raw code."
-            : "DiddySMS resolves the closest matching service automatically."
     }
 
     private func formattedPhone(_ digits: String) -> String {

@@ -67,49 +67,61 @@ struct DiddySMSClient {
         if !ok {
             let detail = json["detail"]
             if let d = detail as? [String: Any] {
-                if let e = d["error"] as? [String: Any], let m = e["message"] as? String { errMsg = m }
-                else if let m = d["message"] as? String { errMsg = m }
+                if let e = d["error"] as? [String: Any] {
+                    errMsg = (e["message"] as? String) ?? (e["code"] as? String)
+                } else if let m = d["message"] as? String {
+                    errMsg = m
+                }
             } else if let d = detail as? String {
                 errMsg = d
+            } else if let arr = detail as? [[String: Any]] {
+                // FastAPI request-validation errors: [{ "loc": [...], "msg": "...", "type": "..." }]
+                let msgs = arr.compactMap { $0["msg"] as? String }
+                if !msgs.isEmpty { errMsg = msgs.joined(separator: "; ") }
+            }
+            if errMsg == nil, let e = json["error"] as? [String: Any] {
+                errMsg = (e["message"] as? String) ?? (e["code"] as? String)
             }
             if errMsg == nil { errMsg = (json["message"] as? String) ?? "Request failed (HTTP \(status))" }
         }
         return (ok, status, json, errMsg)
     }
 
-    /// Best-effort resolution of a search term to a DiddySMS service name.
-    func resolveService(term: String) async -> String? {
+    /// Resolve a search term to a ranked list of candidate DiddySMS service names
+    /// (highest score first). The catalog is the source of truth for valid slugs, so
+    /// ordering tries these in order until one is accepted.
+    func resolveCandidates(term: String) async -> [String] {
         let hNorm = term.replacingOccurrences(of: "^www\\.", with: "", options: [.regularExpression, .caseInsensitive]).lowercased()
-        guard !hNorm.isEmpty else { return nil }
+        guard !hNorm.isEmpty else { return [] }
         var merged: [String: [String: Any]] = [:]
         func services(_ path: String) async -> [[String: Any]] {
             guard let r = try? await request("GET", path), r.ok else { return [] }
             return (r.json["services"] as? [[String: Any]]) ?? []
         }
-        for svc in await services("/services?search=\(hNorm.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? hNorm)&per_page=100") {
+        // Search first (cheap), then page through the catalog if needed.
+        let encoded = hNorm.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? hNorm
+        for svc in await services("/services?search=\(encoded)&per_page=100") {
             if let name = svc["name"] as? String, merged[name] == nil { merged[name] = svc }
         }
-        var bestName: String? = nil
-        var bestScore = 0
-        for svc in merged.values {
-            let sc = score(term: hNorm, svc: svc)
-            if sc > bestScore { bestScore = sc; bestName = svc["name"] as? String }
+        if merged.isEmpty {
+            var page = 1
+            var totalPages = 1
+            repeat {
+                guard let r = try? await request("GET", "/services?page=\(page)&per_page=100"), r.ok,
+                      let list = r.json["services"] as? [[String: Any]] else { break }
+                for svc in list {
+                    if let name = svc["name"] as? String, merged[name] == nil { merged[name] = svc }
+                }
+                totalPages = ((r.json["pagination"] as? [String: Any])?["total_pages"] as? Int) ?? 1
+                page += 1
+            } while page <= totalPages && page <= 15
         }
-        if let b = bestName, bestScore >= 28 { return b }
-        // Fall back to paging through the full catalog.
-        var page = 1
-        var totalPages = 1
-        repeat {
-            guard let r = try? await request("GET", "/services?page=\(page)&per_page=100"), r.ok,
-                  let list = r.json["services"] as? [[String: Any]] else { break }
-            for svc in list {
-                let sc = score(term: hNorm, svc: svc)
-                if sc > bestScore { bestScore = sc; bestName = (svc["name"] as? String) ?? bestName }
-            }
-            totalPages = ((r.json["pagination"] as? [String: Any])?["total_pages"] as? Int) ?? 1
-            page += 1
-        } while page <= totalPages && page <= 15
-        return (bestName != nil && bestScore >= 28) ? bestName : nil
+        let ranked = merged.values
+            .map { (name: ($0["name"] as? String) ?? "", score: score(term: hNorm, svc: $0)) }
+            .filter { !$0.name.isEmpty && $0.score > 0 }
+            .sorted { $0.score > $1.score }
+            .map { $0.name }
+        return ranked
     }
 
     private func score(term: String, svc: [String: Any]) -> Int {
@@ -132,38 +144,47 @@ struct DiddySMSClient {
         return sc
     }
 
-    /// Order a number. Tries the given service, then resolution, then carriers.
+    /// Order a number. Builds a candidate slug list from the live catalog (plus the
+    /// raw term as a fallback), tries each until one is accepted, then falls back to
+    /// per-carrier ordering on the best candidate.
     func order(serviceTerm: String) async throws -> SMSOrder {
         let term = serviceTerm.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !term.isEmpty else { throw SMSError.message("Enter a service (e.g. instagram) in Settings or above.") }
+        guard !term.isEmpty else { throw SMSError.message("No service configured.") }
 
-        var service = term
-        var r = try await request("POST", "/orders", body: ["service": service])
-        var order = (r.json["order"] as? [String: Any])
+        // Catalog matches rank first; the raw term is a last resort.
+        var candidates = await resolveCandidates(term: term)
+        if !candidates.contains(term) { candidates.append(term) }
 
-        // If the direct term wasn't accepted, try to resolve it to a real service name.
-        if !r.ok || order?["id"] == nil {
-            if let resolved = await resolveService(term: term), resolved != service {
-                service = resolved
-                r = try await request("POST", "/orders", body: ["service": service])
-                order = r.json["order"] as? [String: Any]
+        var lastError: String? = nil
+        var chosen: String = term
+        var order: [String: Any]? = nil
+
+        for service in candidates {
+            let r = try await request("POST", "/orders", body: ["service": service])
+            if let o = r.json["order"] as? [String: Any], o["id"] != nil {
+                order = o; chosen = service; break
             }
+            if let e = r.errorMessage { lastError = e }
         }
 
-        // Carrier fallback.
-        if order?["id"] == nil {
+        // Carrier fallback on the top candidate.
+        if order == nil {
+            let service = candidates.first ?? term
             for c in Self.carriers {
-                r = try await request("POST", "/orders", body: ["service": service, "carrier": c])
-                if let o = r.json["order"] as? [String: Any], o["id"] != nil { order = o; break }
+                let r = try await request("POST", "/orders", body: ["service": service, "carrier": c])
+                if let o = r.json["order"] as? [String: Any], o["id"] != nil {
+                    order = o; chosen = service; break
+                }
+                if let e = r.errorMessage { lastError = e }
             }
         }
 
         guard let o = order, let idVal = o["id"] else {
-            throw SMSError.message(r.errorMessage ?? "no number available")
+            throw SMSError.message(lastError ?? "no number available")
         }
         let id = "\(idVal)"
         let phone = SMSHelpers.digits(o["phone_number"] as? String ?? "\(o["phone_number"] ?? "")")
-        return SMSOrder(provider: .diddy, orderId: id, phone: phone, service: service)
+        return SMSOrder(provider: .diddy, orderId: id, phone: phone, service: chosen)
     }
 
     /// Poll an order for its SMS code (empty string = not yet arrived).
