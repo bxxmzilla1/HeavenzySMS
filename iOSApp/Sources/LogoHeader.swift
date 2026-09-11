@@ -9,8 +9,13 @@ struct LogoHeader: View {
             Image("LogoStars")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(width: 116, height: 116)
-                .shadow(color: Theme.purple.opacity(0.6), radius: 24, x: 0, y: 0)
+                .frame(width: 76, height: 76)
+                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .stroke(Theme.purple.opacity(0.55), lineWidth: 1.5)
+                )
+                .shadow(color: Theme.purple.opacity(0.55), radius: 18, x: 0, y: 0)
 
             VStack(spacing: 4) {
                 Text("HeavenzySMS")

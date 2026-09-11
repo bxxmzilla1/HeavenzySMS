@@ -24,5 +24,6 @@ struct RootView: View {
                 .tabItem { Label("Settings", systemImage: "gearshape.fill") }
         }
         .tint(Theme.purpleBright)
+        .onAppear { KeyboardDismissInstaller.shared.install() }
     }
 }

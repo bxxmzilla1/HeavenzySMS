@@ -97,6 +97,13 @@ struct SettingsView: View {
                 }
                 .padding(20)
             }
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") { hideKeyboard() }
+                        .foregroundColor(Theme.purpleBright)
+                }
+            }
         }
     }
 
