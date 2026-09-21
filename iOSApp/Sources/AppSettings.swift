@@ -37,6 +37,7 @@ struct GrizzlyCountry: Identifiable, Hashable {
         .init(id: "33", name: "Colombia — ~$0.02 (Instagram)"),
         .init(id: "19", name: "Nigeria — ~$0.05 (Instagram)"),
         .init(id: "4", name: "Philippines — ~$0.06 (Instagram)"),
+        .init(id: "12", name: "USA (virtual) — ~$0.03 (Instagram)"),
         .init(id: "187", name: "USA — ~$0.07 (Instagram)"),
         .init(id: "6", name: "Indonesia"),
         .init(id: "22", name: "India"),
