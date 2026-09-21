@@ -37,7 +37,7 @@ struct SettingsView: View {
                                 }
                             }
                             .pickerStyle(.menu)
-                            .tint(Theme.purpleBright)
+                            .tint(Theme.accentBright)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.vertical, 10).padding(.horizontal, 12)
                             .background(RoundedRectangle(cornerRadius: 12).fill(Color.black.opacity(0.25)))
@@ -61,7 +61,7 @@ struct SettingsView: View {
                                 }
                             }
                             .pickerStyle(.menu)
-                            .tint(Theme.purpleBright)
+                            .tint(Theme.accentBright)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.vertical, 10).padding(.horizontal, 12)
                             .background(RoundedRectangle(cornerRadius: 12).fill(Color.black.opacity(0.25)))
@@ -101,7 +101,7 @@ struct SettingsView: View {
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
                     Button("Done") { hideKeyboard() }
-                        .foregroundColor(Theme.purpleBright)
+                        .foregroundColor(Theme.accentBright)
                 }
             }
         }

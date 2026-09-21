@@ -49,10 +49,10 @@ struct NumberView: View {
                 Spacer()
                 Text("Only")
                     .font(.system(size: 11, weight: .bold, design: .rounded))
-                    .foregroundColor(Theme.purpleBright)
+                    .foregroundColor(Theme.accentBright)
                     .padding(.vertical, 5).padding(.horizontal, 10)
-                    .background(Capsule().fill(Theme.purple.opacity(0.18)))
-                    .overlay(Capsule().stroke(Theme.purple.opacity(0.4), lineWidth: 1))
+                    .background(Capsule().fill(Theme.accent.opacity(0.18)))
+                    .overlay(Capsule().stroke(Theme.accent.opacity(0.4), lineWidth: 1))
             }
         }
     }
@@ -95,7 +95,7 @@ struct NumberView: View {
                     valueRow(title: "SMS code", value: vm.code, copyKey: "code", rawValue: vm.code, systemImage: "checkmark.seal.fill", highlight: true)
                 } else {
                     HStack(spacing: 12) {
-                        ProgressView().tint(Theme.purpleBright)
+                        ProgressView().tint(Theme.accentBright)
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Waiting for SMS code")
                                 .font(.system(size: 16, weight: .semibold, design: .rounded))
@@ -108,7 +108,7 @@ struct NumberView: View {
                         Button { vm.pollNow() } label: {
                             Image(systemName: "arrow.clockwise")
                                 .font(.system(size: 16, weight: .bold))
-                                .foregroundColor(Theme.purpleBright)
+                                .foregroundColor(Theme.accentBright)
                                 .padding(10)
                                 .background(Circle().fill(Color.white.opacity(0.06)))
                         }
@@ -116,7 +116,7 @@ struct NumberView: View {
                 }
                 HStack(spacing: 6) {
                     Text("Provider").foregroundColor(Theme.textSecondary)
-                    Text(vm.activeProvider.label).foregroundColor(Theme.purpleBright)
+                    Text(vm.activeProvider.label).foregroundColor(Theme.accentBright)
                     if !vm.service.isEmpty {
                         Text("· \(vm.service)").foregroundColor(Theme.textSecondary)
                     }
@@ -130,7 +130,7 @@ struct NumberView: View {
         HStack(spacing: 14) {
             Image(systemName: systemImage)
                 .font(.system(size: 18, weight: .semibold))
-                .foregroundColor(highlight ? Theme.purpleBright : Theme.textSecondary)
+                .foregroundColor(highlight ? Theme.accentBright : Theme.textSecondary)
                 .frame(width: 26)
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)

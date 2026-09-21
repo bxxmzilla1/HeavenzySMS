@@ -23,7 +23,7 @@ struct RootView: View {
             SettingsView()
                 .tabItem { Label("Settings", systemImage: "gearshape.fill") }
         }
-        .tint(Theme.purpleBright)
+        .tint(Theme.accentBright)
         .onAppear { KeyboardDismissInstaller.shared.install() }
     }
 }

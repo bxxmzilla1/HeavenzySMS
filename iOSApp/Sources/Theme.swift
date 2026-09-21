@@ -1,16 +1,16 @@
 import SwiftUI
 
 /// Visual language for HeavenzySMS — a dark, high-end look built around the
-/// purple-star Sessions X mark.
+/// neon-emerald star mark. Colors are sampled from the logo itself.
 enum Theme {
-    static let purple = Color(red: 0.545, green: 0.184, blue: 0.878)   // #8B2FE0
-    static let purpleBright = Color(red: 0.667, green: 0.361, blue: 0.988) // #AA5CFC
-    static let purpleDeep = Color(red: 0.298, green: 0.086, blue: 0.529) // #4C1687
+    static let accent = Color(red: 0.173, green: 0.804, blue: 0.435)       // #2CCD6F ring green
+    static let accentBright = Color(red: 0.455, green: 1.000, blue: 0.737) // #74FFBC star highlight
+    static let accentDeep = Color(red: 0.043, green: 0.420, blue: 0.227)   // #0B6B3A shadow green
 
-    static let bg = Color(red: 0.039, green: 0.031, blue: 0.063)       // near-black indigo
-    static let bg2 = Color(red: 0.071, green: 0.055, blue: 0.114)
+    static let bg = Color(red: 0.008, green: 0.039, blue: 0.020)           // #020A05 logo background
+    static let bg2 = Color(red: 0.016, green: 0.086, blue: 0.047)          // #04160C
     static let card = Color.white.opacity(0.05)
-    static let cardStroke = Color.white.opacity(0.09)
+    static let cardStroke = accent.opacity(0.14)
     static let textPrimary = Color.white
     static let textSecondary = Color.white.opacity(0.62)
 
@@ -24,7 +24,7 @@ enum Theme {
 
     static var accentGradient: LinearGradient {
         LinearGradient(
-            colors: [purpleBright, purple, purpleDeep],
+            colors: [accentBright, accent, accentDeep],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
@@ -52,7 +52,7 @@ struct GlassCard<Content: View>: View {
     }
 }
 
-/// Primary call-to-action button style with the signature purple gradient.
+/// Primary call-to-action button style with the signature emerald gradient.
 struct PrimaryButtonStyle: ButtonStyle {
     var enabled: Bool = true
     func makeBody(configuration: Configuration) -> some View {
@@ -70,7 +70,7 @@ struct PrimaryButtonStyle: ButtonStyle {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .stroke(Color.white.opacity(0.15), lineWidth: 1)
             )
-            .shadow(color: Theme.purple.opacity(enabled ? 0.5 : 0), radius: 16, x: 0, y: 8)
+            .shadow(color: Theme.accent.opacity(enabled ? 0.5 : 0), radius: 16, x: 0, y: 8)
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
             .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
     }
